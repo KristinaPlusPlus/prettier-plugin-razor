@@ -1,0 +1,27 @@
+{
+  "name": "prettier-plugin-razor",
+  "version": "0.0.1",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "example": "prettier --plugin . example.razor",
+    "test": "jest"
+  },
+  "keywords": [
+    "prettier",
+    "razor",
+    "plugin"
+  ],
+  "author": {
+    "name": "Kristina Corrado"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "prettier": "^1.15.3",
+    "void-elements": "^3.1.0"
+  },
+  "devDependencies": {
+    "jest": "^24.0.0",
+    "jest-watch-typeahead": "^0.2.1"
+  }
+}
