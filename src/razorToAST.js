@@ -1,7 +1,6 @@
 // Code originally from from https://github.com/rayd/html-parse-stringify2
 
-//var tagRE = /(?:<(?:"[^"]*"['"]*|'[^']*'['"]*|[^'">])+>)/g;
-var tagRE = /(?:<(?:"[^"]*"['"]*|'[^']*'['"]*|[^'">])+>|@.*|\{|\})/g;
+var tagRE = /(?:<(?:"[^"]*"['"]*|'[^']*'['"]*|[^'">])+>|\@[^\{\n\<]*|\{|\})/g;
 var codeRE = /\@code\s*{/g;
 var wsRE = /^\s*$/;
 var parseTag = require('./parse-tag');
@@ -56,9 +55,10 @@ module.exports = function parse(razor) {
 
     razor.replace(tagRE, function (tag, index) {
 
-        var isOpen = tag.charAt(1) !== '/';// || tag.charAt(0) !== '\}'; // TODO
+        var isOpen = tag.charAt(1) !== '/' && tag.charAt(0) !== '\}';
         var isComment = tag.indexOf('<!--') === 0;
-        var isScriptCode = tag.indexOf('\@') == 0 || tag.indexOf('\{') == 0 || tag.indexOf('\}') == 0;
+        var isAt = tag.indexOf('\@') == 0;
+        var isScriptCode = isAt || tag.indexOf('\{') == 0 || tag.indexOf('\}') == 0;
         var start = index + tag.length;
         var parent;
 
@@ -76,24 +76,25 @@ module.exports = function parse(razor) {
                 pushTextNode(current.children, razor, level, start, ignoreWhitespace);
             }
 
-            // if we're at root, push new base node
-            if (level === 0) {
-                result.push(current);
-            }
+            // if we're at the root, push a base text node. otherwise add as
+            // a child to the previous node.
+            parent = level <= 0 ? result : arr[level-1].children;
 
-            parent = arr[level - 1];
-
-            if (parent) {
-                parent.children.push(current);
-            }
+            parent.push(current);
 
             arr[level] = current;
         }
 
         if (isComment || !isOpen || current.voidElement) {
-            level--;
+            if(!isComment){
+                level--;
+            } 
+            // trailing text node
+            // if we're at the root, push a base text node. otherwise add as
+            // a child to the current node.
+            parent = level <= -1 ? result : arr[level].children;
+
             if (isComment) {
-                parent = level <= -1 ? result : arr[level].children;
                 current = {
                     type: 'comment',
                     content: tag
@@ -101,10 +102,6 @@ module.exports = function parse(razor) {
                 parent.push(current);
             }
             if ( getNext(razor, start) !== start) {
-                // trailing text node
-                // if we're at the root, push a base text node. otherwise add as
-                // a child to the current node.
-                parent = level <= -1 ? result : arr[level].children;
                 pushTextNode(parent, razor, level, start, ignoreWhitespace);
             }
         }

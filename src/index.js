@@ -2,7 +2,7 @@ const razorToAST = require('./razorToAST')
 const {
   doc: {
     // https://github.com/prettier/prettier/blob/main/commands.md
-    builders: { concat, group, indent, dedent, softline, hardline }
+    builders: { concat, indent, dedent, softline, hardline}
   }
 } = require('prettier')
 
@@ -34,7 +34,7 @@ function printRazor(path, options, print) {
     return concat(path.map(print))
   }
 
-  return concat([formatRazor(node), hardline])
+  return concat([formatRazor(node), softline])
 }
 
 function formatRazor(node, hasLines = true) {
@@ -52,7 +52,7 @@ function formatRazor(node, hasLines = true) {
   }
 }
 
-function formatCode(node) {
+function formatCode(node, hasLines) {
   // https://www.w3schools.com/asp/razor_syntax.asp
   var innerVals = ''
 
@@ -60,19 +60,23 @@ function formatCode(node) {
   if (Array.isArray(node.children)) {
     // Loop through values
     node.children.forEach(element => {
-      innerVals = concat([innerVals, formatRazor(element)])
+      innerVals = concat([innerVals, formatRazor(element, false)])
     });
   }
 
   // Based on the type
   if (node.name == '{'){
-    return concat([node.name, softline, group(indent(innerVals))])
-  }
-  else if(node.name == '}'){
-    return group(dedent(concat([node.name, softline, innerVals])))
+    formattedCode = concat([node.name.trim(), softline, indent(innerVals), softline, '}'])
   }
   else{
-    return concat([node.name, softline, innerVals])
+    formattedCode = concat([node.name.trim(), innerVals])
+  }
+
+  if (hasLines) {
+    return concat([formattedCode, softline])
+  }
+  else {
+    return formattedCode
   }
 }
 
@@ -93,6 +97,8 @@ function formatTag(node) {
   // https://www.w3schools.com/html/html5_syntax.asp
   var innerHTML = ''
   var attribs = ''
+  var endTag = ''
+  var headTag
   var hasInnerHTML = false
 
   // Handle the attributes
@@ -118,11 +124,17 @@ function formatTag(node) {
     if(hasInnerHTML) {
       innerHTML = concat([innerHTML, hardline])
     }
-    innerHTML = group(indent(innerHTML))
+    innerHTML = indent(innerHTML)
   }
 
+  if(!node.voidElement){
+    endTag = concat(['</', node.name, '>'])
+  }
+
+  headTag = concat(['<', node.name.toLowerCase(), attribs, '>'])
+
   // Return the tag
-  return concat(['<', node.name.toLowerCase(), attribs, '>', innerHTML, '</', node.name, '>'])
+  return concat([headTag, innerHTML, dedent(endTag)])
 }
 
 module.exports = {

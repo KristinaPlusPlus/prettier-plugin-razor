@@ -7,5 +7,8 @@ module.exports = function (tag) {
         voidElement: false,
         children: []
     };
+    if (tag.charAt(0) === '\@') {
+        res.voidElement = true;
+    }
     return res;
 };
