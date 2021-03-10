@@ -2,7 +2,7 @@ const razorToAST = require('./razorToAST')
 const {
   doc: {
     // https://github.com/prettier/prettier/blob/main/commands.md
-    builders: { concat, indent, dedent, softline, hardline}
+    builders: { concat, indent, markAsRoot, dedentToRoot, softline, hardline}
   }
 } = require('prettier')
 
@@ -60,13 +60,13 @@ function formatCode(node, hasLines) {
   if (Array.isArray(node.children)) {
     // Loop through values
     node.children.forEach(element => {
-      innerVals = concat([innerVals, formatRazor(element, false)])
+      innerVals = concat([innerVals, hardline, formatRazor(element, false)])
     });
   }
 
   // Based on the type
   if (node.name == '{'){
-    formattedCode = concat([node.name.trim(), softline, indent(innerVals), softline, '}'])
+    formattedCode = concat([node.name.trim(), indent(innerVals), softline, '}'])
   }
   else{
     formattedCode = concat([node.name.trim(), innerVals])
@@ -134,7 +134,7 @@ function formatTag(node) {
   headTag = concat(['<', node.name.toLowerCase(), attribs, '>'])
 
   // Return the tag
-  return concat([headTag, innerHTML, dedent(endTag)])
+  return concat([markAsRoot(headTag), innerHTML, dedentToRoot(endTag)])
 }
 
 module.exports = {
