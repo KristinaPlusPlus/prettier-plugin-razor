@@ -1,7 +1,7 @@
 {
   "name": "prettier-plugin-razor",
-  "version": "0.0.1",
-  "description": "",
+  "version": "1.0.0",
+  "description": "Prettier Razor Plugin",
   "main": "src/index.js",
   "scripts": {
     "example": "prettier --plugin . example.razor",
@@ -12,6 +12,10 @@
     "razor",
     "plugin"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KristinaPlusPlus/prettier-plugin-razor.git"
+  },
   "author": {
     "name": "Kristina Corrado"
   },
