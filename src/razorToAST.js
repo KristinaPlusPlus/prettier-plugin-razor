@@ -38,6 +38,7 @@ function getNext(parentStr, start=0){
 
 module.exports = function parse(razor) {
     var ignoreWhitespace = true;
+    var addBlankLine = false;
     var result = [];
     var current;
     var level = -1;
@@ -60,7 +61,19 @@ module.exports = function parse(razor) {
         var isAt = tag.indexOf('\@') == 0;
         var isScriptCode = isAt || tag.indexOf('\{') == 0 || tag.indexOf('\}') == 0;
         var start = index + tag.length;
+        var hasHeader = isScriptCode && index == 0;
         var parent;
+
+        if(hasHeader && index == 0) {
+            addBlankLine = true
+        }
+        if(!isScriptCode && addBlankLine){
+            result.push({
+                type: 'text',
+                content: ''
+            });
+            addBlankLine = false
+        }
 
         if (!isComment && isOpen) {
             level++;

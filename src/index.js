@@ -2,7 +2,7 @@ const razorToAST = require('./razorToAST')
 const {
   doc: {
     // https://github.com/prettier/prettier/blob/main/commands.md
-    builders: { concat, indent, markAsRoot, dedentToRoot, softline, hardline}
+    builders: { concat, indent, dedent, softline, hardline, line}
   }
 } = require('prettier')
 
@@ -37,12 +37,12 @@ function printRazor(path, options, print) {
   return concat([formatRazor(node), softline])
 }
 
-function formatRazor(node, hasLines = true) {
+function formatRazor(node) {
   switch (node.type) {
     case 'tag':
       return formatTag(node)
     case 'text':
-      return formatText(node, hasLines)
+      return formatText(node)
     case 'code':
       return formatCode(node)
     case 'comment':
@@ -52,7 +52,7 @@ function formatRazor(node, hasLines = true) {
   }
 }
 
-function formatCode(node, hasLines) {
+function formatCode(node) {
   // https://www.w3schools.com/asp/razor_syntax.asp
   var innerVals = ''
 
@@ -72,25 +72,15 @@ function formatCode(node, hasLines) {
     formattedCode = concat([node.name.trim(), innerVals])
   }
 
-  if (hasLines) {
-    return concat([formattedCode, softline])
-  }
-  else {
-    return formattedCode
-  }
+  return formattedCode
 }
 
 function formatComment(node) {
-  return concat([node.content.trim(), softline])
+  return concat([softline, node.content.trim()])
 }
 
-function formatText(node, hasLines) {
-  if (hasLines) {
-    return concat([node.content.trim(), softline])
-  }
-  else {
-    return concat([node.content.trim()])
-  }
+function formatText(node) {
+  return concat([node.content.trim()])
 }
 
 function formatTag(node) {
@@ -99,7 +89,7 @@ function formatTag(node) {
   var attribs = ''
   var endTag = ''
   var headTag
-  var hasInnerHTML = false
+  var hasInnerElement = false
 
   // Handle the attributes
   for (const [key, value] of Object.entries(node.attrs)) {
@@ -108,21 +98,35 @@ function formatTag(node) {
 
   // Handle the inner html or text
   if (Array.isArray(node.children)) {
+    var count = node.children.length
     // Loop through values
-    node.children.forEach(element => {
+    node.children.forEach((element, i) => {
       switch (element.type) {
         case 'tag':
           innerHTML = concat([innerHTML, hardline, formatRazor(element)])
-          hasInnerHTML = true
+          hasInnerElement = true
+          break
+        case 'code':
+          var isCode1 = i + 1 >= count ? false : node.children[i + 1].type == 'code'
+          var isCode2 = i - 1 < 0 ? false : node.children[i - 1].type == 'code'
+          if (isCode1 || isCode2){
+            innerHTML = concat([innerHTML, softline, formatRazor(element)])
+          }
+          else{
+            innerHTML = concat([innerHTML, formatRazor(element)])
+          }
+          if (element.name == '{'){
+            hasInnerElement = true
+          }
           break
         default:
-          innerHTML = concat([innerHTML, formatRazor(element, false)])
+          innerHTML = concat([innerHTML, formatRazor(element)])
           break
       }
     });
 
-    if(hasInnerHTML) {
-      innerHTML = concat([innerHTML, hardline])
+    if(hasInnerElement) {
+      innerHTML = concat([innerHTML, dedent(line)])
     }
     innerHTML = indent(innerHTML)
   }
@@ -134,7 +138,7 @@ function formatTag(node) {
   headTag = concat(['<', node.name.toLowerCase(), attribs, '>'])
 
   // Return the tag
-  return concat([markAsRoot(headTag), innerHTML, dedentToRoot(endTag)])
+  return concat([headTag, innerHTML, endTag])
 }
 
 module.exports = {
