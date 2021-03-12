@@ -59,14 +59,38 @@ function formatCode(node) {
   // Handle the inner html or text
   if (Array.isArray(node.children)) {
     // Loop through values
-    node.children.forEach(element => {
-      innerVals = concat([innerVals, hardline, formatRazor(element, false)])
+    node.children.forEach((element, i) => {
+      switch (element.type) {
+        case 'text':
+          if (element.content == ''){
+            innerVals = concat([innerVals, softline])
+          }
+          else{
+            innerVals = concat([innerVals, formatRazor(element)])
+          }
+          break
+        case 'code':
+          var needsNewline = i - 1 < 0 ? true : node.children[i - 1].type == 'code'
+          if (needsNewline){
+            innerVals = concat([innerVals, formatRazor(element), softline])
+          }
+          else{
+            innerVals = concat([innerVals, formatRazor(element)])
+          }
+          break
+        default:
+          innerVals = concat([innerVals, formatRazor(element)])
+          break
+        }
     });
+    if (node.name == '{'){
+      innerVals = concat([softline, innerVals, dedent(line)])
+    }
   }
 
   // Based on the type
   if (node.name == '{'){
-    formattedCode = concat([node.name.trim(), indent(innerVals), softline, '}'])
+    formattedCode = concat([node.name.trim(), indent(innerVals), '}'])
   }
   else{
     formattedCode = concat([node.name.trim(), innerVals])
@@ -80,7 +104,7 @@ function formatComment(node) {
 }
 
 function formatText(node) {
-  return concat([node.content.trim()])
+  return node.content.trim()
 }
 
 function formatTag(node) {
@@ -90,15 +114,15 @@ function formatTag(node) {
   var endTag = ''
   var headTag
   var hasInnerElement = false
+  var hasNewline = false
 
   // Handle the attributes
   for (const [key, value] of Object.entries(node.attrs)) {
-    attribs = concat([attribs, ' ', key.toLowerCase(), "=\"", value, "\""])
+    attribs = concat([attribs, ' ', key, "=\"", value, "\""])
   }
 
   // Handle the inner html or text
   if (Array.isArray(node.children)) {
-    var count = node.children.length
     // Loop through values
     node.children.forEach((element, i) => {
       switch (element.type) {
@@ -107,25 +131,31 @@ function formatTag(node) {
           hasInnerElement = true
           break
         case 'code':
-          var isCode1 = i + 1 >= count ? false : node.children[i + 1].type == 'code'
-          var isCode2 = i - 1 < 0 ? false : node.children[i - 1].type == 'code'
-          if (isCode1 || isCode2){
-            innerHTML = concat([innerHTML, softline, formatRazor(element)])
+          var isNoNewline = i - 1 < 0 ? true : (node.children[i - 1].type == 'text' && node.children[i - 1].content != '')
+          if(isNoNewline){
+            innerHTML = concat([innerHTML, " ", formatRazor(element)])
           }
           else{
-            innerHTML = concat([innerHTML, formatRazor(element)])
+            innerHTML = concat([innerHTML, softline, formatRazor(element)])
           }
           if (element.name == '{'){
             hasInnerElement = true
           }
           break
         default:
-          innerHTML = concat([innerHTML, formatRazor(element)])
+          var isNewline = element.type == 'text' && element.content == ''
+          if (isNewline){
+            hasNewline = true
+            innerHTML = concat([innerHTML, softline])
+          }
+          else{
+            innerHTML = concat([innerHTML, formatRazor(element)])
+          }
           break
       }
     });
 
-    if(hasInnerElement) {
+    if(hasInnerElement || hasNewline) {
       innerHTML = concat([innerHTML, dedent(line)])
     }
     innerHTML = indent(innerHTML)
@@ -133,9 +163,11 @@ function formatTag(node) {
 
   if(!node.voidElement){
     endTag = concat(['</', node.name, '>'])
+    headTag = concat(['<', node.name, attribs, '>'])
   }
-
-  headTag = concat(['<', node.name.toLowerCase(), attribs, '>'])
+  else{
+    headTag = concat(['<', node.name, attribs, '/>'])
+  }
 
   // Return the tag
   return concat([headTag, innerHTML, endTag])

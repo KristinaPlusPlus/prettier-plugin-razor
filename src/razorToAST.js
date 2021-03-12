@@ -1,6 +1,6 @@
 // Code originally from from https://github.com/rayd/html-parse-stringify2
 
-var tagRE = /(?:<(?:"[^"]*"['"]*|'[^']*'['"]*|[^'">])+>|\@[^\{\n\<]*|\{|\})/g;
+var tagRE = /(?:(?:^@.*|(?<!")@[^{\r\n<]*|else[^{\r\n<]*|for[^{\r\n<]*)|<[^>]+>|\{|\})/gmi;
 var codeRE = /\@code\s*{/g;
 var wsRE = /^\s*$/;
 var parseTag = require('./parse-tag');
@@ -17,13 +17,19 @@ function pushTextNode(list, razor, level, start, ignoreWhitespace) {
     // if a node is nothing but whitespace, collapse it as the spec states:
     // https://www.w3.org/TR/html4/struct/text.html#h-9.1
     if (wsRE.test(content)) {
-        content = ' ';
+        // Check if just end of line
+        if(content.includes('\r\n\r\n')){
+            content = '';
+        }
+        else{
+            content = ' ';
+        }
     }
     // don't add whitespace-only text nodes if they would be trailing text nodes
     // or if they would be leading whitespace-only text nodes:
     //  * end > -1 indicates this is not a trailing text node
     //  * leading node is when level is -1 and list has length 0
-    if ((!ignoreWhitespace && end > -1 && level + list.length >= 0) || content !== ' ') {
+    if ((!ignoreWhitespace && end > -1 && level + list.length >= 0 && content != ' ')) {
         list.push({
             type: 'text',
             content: content
@@ -37,43 +43,38 @@ function getNext(parentStr, start=0){
 }
 
 module.exports = function parse(razor) {
-    var ignoreWhitespace = true;
-    var addBlankLine = false;
+    var ignoreWhitespace = false;
     var result = [];
     var current;
     var level = -1;
     var arr = [];
 
-    var matchIndex = tagRE.exec(razor)[0].index;
+    // Find the code section
+    var matchCodeSec = codeRE.exec(razor)
+    if (matchCodeSec != null){
+        var codeSecIndex = matchCodeSec.index
+    }
+    else{
+        var codeSecIndex = razor.length
+    }
+
+    // Ignore the code section while parsing
+    var codeSection = razor.substring(codeSecIndex, razor.length)
+    var razor = razor.replace(codeSection, '');
+
+    var matchIndex = tagRE.exec(razor).index;
     // Check if there are non-whitespace values prior to first tag
     if (matchIndex !== 0 && razor.substring(0, matchIndex).trim().length !== 0){
         pushTextNode(result, razor, 0, 0, ignoreWhitespace);
     }
 
-    // Ignore the code section while parsing
-    var codeSection = razor.substring(codeRE.exec(razor).index, razor.length)
-    var razor = razor.replace(codeSection, '');
-
     razor.replace(tagRE, function (tag, index) {
 
         var isOpen = tag.charAt(1) !== '/' && tag.charAt(0) !== '\}';
         var isComment = tag.indexOf('<!--') === 0;
-        var isAt = tag.indexOf('\@') == 0;
-        var isScriptCode = isAt || tag.indexOf('\{') == 0 || tag.indexOf('\}') == 0;
+        var isScriptCode = tag.indexOf('\@') == 0 || tag.indexOf('\{') == 0 || tag.indexOf('\}') == 0 || tag.toLowerCase().indexOf('else') == 0 || tag.toLowerCase().indexOf('for') == 0;
         var start = index + tag.length;
-        var hasHeader = isScriptCode && index == 0;
         var parent;
-
-        if(hasHeader && index == 0) {
-            addBlankLine = true
-        }
-        if(!isScriptCode && addBlankLine){
-            result.push({
-                type: 'text',
-                content: ''
-            });
-            addBlankLine = false
-        }
 
         if (!isComment && isOpen) {
             level++;
