@@ -1,6 +1,6 @@
 // Code originally from from https://github.com/rayd/html-parse-stringify2
 
-var tagRE = /(?:(?:^@.*|(?<!")@[^{\r\n<]*|else[^{\r\n<]*|for[^{\r\n<]*)|<[^>]+(?:\=>)*[^>]+>|\{|\})/gmi;
+var tagRE = /(?:(?:^@.*|(?<!")@[^{\r\n<]*|else[^{\r\n<]*|for[^{\r\n<]*)|<[^>]*(?:\=>)*[^>]+>|\{|\})/gmi;
 var codeRE = /\@code\s*{/g;
 var wsRE = /^\s*$/;
 var parseTag = require('./parse-tag');
