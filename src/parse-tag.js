@@ -1,6 +1,6 @@
 // Code originally from from https://github.com/rayd/html-parse-stringify2
 
-var attrRE = /([\w-]+)|=|(['"])([.\s\S]*?)\2/g;
+var attrRE = /([^\/=<> ]+)|=|(['"])([.\s\S]*?)\2/g;
 var voidElements = require('void-elements');
 
 module.exports = function (tag) {
