@@ -1,6 +1,6 @@
 // Code originally from from https://github.com/rayd/html-parse-stringify2
 
-var tagRE = /(?:(?:^@.+|(?<!")@[^{\r\n<]+|else[^{\r\n<]*|for[^{\r\n<]*)|<[^>]*(?:\=>)*[^>]+>|[@]*\{|\})/gmi;
+var tagRE = /(?:@\*.+\*@|(?:^@.+|(?<!")@[^{\r\n<]+|else[^{\r\n<]*|for[^{\r\n<]*)|<[^<|"]*(("[^"]*")[^>|"]*)*>|[@]*\{|\})/gmi;
 var codeRE = /\@code\s*{/g;
 var wsRE = /^\s*$/;
 var parseTag = require('./parse-tag');
@@ -71,7 +71,7 @@ module.exports = function parse(razor) {
     razor.replace(tagRE, function (tag, index) {
 
         var isOpen = tag.charAt(1) !== '/' && tag.charAt(0) !== '\}';
-        var isComment = tag.indexOf('<!--') === 0;
+        var isComment = tag.indexOf('<!--') === 0 || tag.indexOf('\@\*') == 0;
         var isScriptCode = tag.indexOf('\@') == 0 || tag.indexOf('\{') == 0 || tag.indexOf('\}') == 0 || tag.toLowerCase().indexOf('else') == 0 || tag.toLowerCase().indexOf('for') == 0;
         var start = index + tag.length;
         var parent;

@@ -92,7 +92,7 @@ function formatCode(node) {
   if (node.name == '{' || node.name.includes('@{')){
     formattedCode = concat([node.name.trim(), indent(innerVals), '}'])
   }
-  else if (node.name.includes('@*')){
+  else if (node.name.toLowerCase().indexOf('@if') == 0 || node.name.toLowerCase().indexOf('@for') == 0){
     formattedCode = concat([softline, node.name.trim(), innerVals])
   }
   else{

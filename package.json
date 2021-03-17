@@ -1,6 +1,6 @@
 {
   "name": "prettier-plugin-razor",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Prettier Razor Plugin",
   "main": "src/index.js",
   "scripts": {
