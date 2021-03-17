@@ -83,14 +83,17 @@ function formatCode(node) {
           break
         }
     });
-    if (node.name == '{'){
+    if (node.name == '{' || node.name.includes('@{')){
       innerVals = concat([softline, innerVals, dedent(line)])
     }
   }
 
   // Based on the type
-  if (node.name == '{'){
+  if (node.name == '{' || node.name.includes('@{')){
     formattedCode = concat([node.name.trim(), indent(innerVals), '}'])
+  }
+  else if (node.name.includes('@*')){
+    formattedCode = concat([softline, node.name.trim(), innerVals])
   }
   else{
     formattedCode = concat([node.name.trim(), innerVals])
@@ -138,7 +141,7 @@ function formatTag(node) {
           else{
             innerHTML = concat([innerHTML, softline, formatRazor(element)])
           }
-          if (element.name == '{'){
+          if (element.name == '{' || element.name.includes('@{')){
             hasInnerElement = true
           }
           break
