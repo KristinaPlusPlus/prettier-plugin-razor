@@ -68,7 +68,7 @@ module.exports = function parse(razor) {
         pushTextNode(result, razor, 0, 0, ignoreWhitespace);
     }
 
-    razor.replace(tagRE, function (tag, index) {
+    razor.replace(tagRE, function (tag, p1, p2, index) {
 
         var isOpen = tag.charAt(1) !== '/' && tag.charAt(0) !== '\}';
         var isComment = tag.indexOf('<!--') === 0 || tag.indexOf('\@\*') == 0;
