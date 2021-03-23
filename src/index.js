@@ -78,6 +78,9 @@ function formatCode(node) {
             innerVals = concat([innerVals, formatRazor(element)])
           }
           break
+        case 'comment':
+          innerVals = concat([innerVals, formatRazor(element)])
+          break
         default:
           innerVals = concat([innerVals, formatRazor(element)])
           break
@@ -134,7 +137,7 @@ function formatTag(node) {
           hasInnerElement = true
           break
         case 'code':
-          var isNoNewline = i - 1 < 0 ? true : (node.children[i - 1].type == 'text' && node.children[i - 1].content != '')
+          var isNoNewline = i - 1 < 0 ? node.children.length < 1 : (node.children[i - 1].type == 'text' && node.children[i - 1].content != '')
           if(isNoNewline){
             innerHTML = concat([innerHTML, " ", formatRazor(element)])
           }
@@ -144,6 +147,10 @@ function formatTag(node) {
           if (element.name == '{' || element.name.includes('@{')){
             hasInnerElement = true
           }
+          break
+        case 'comment':
+          innerHTML = concat([innerHTML, formatRazor(element)])
+          hasInnerElement = true
           break
         default:
           var isNewline = element.type == 'text' && element.content == ''
