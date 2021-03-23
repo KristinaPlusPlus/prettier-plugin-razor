@@ -137,15 +137,16 @@ function formatTag(node) {
           hasInnerElement = true
           break
         case 'code':
-          var isNoNewline = i - 1 < 0 ? node.children.length < 1 : (node.children[i - 1].type == 'text' && node.children[i - 1].content != '')
-          if(isNoNewline){
-            innerHTML = concat([innerHTML, " ", formatRazor(element)])
+          var isNoNewline = i - 1 < 0 ? true : (node.children[i - 1].type == 'text' && node.children[i - 1].content != '')
+          if(element.name == '{' || element.name.includes('@{')){
+            innerHTML = concat([innerHTML, softline, formatRazor(element)])
+            hasInnerElement = true
+          }
+          else if(isNoNewline){
+            innerHTML = concat([innerHTML, formatRazor(element), " "])
           }
           else{
             innerHTML = concat([innerHTML, softline, formatRazor(element)])
-          }
-          if (element.name == '{' || element.name.includes('@{')){
-            hasInnerElement = true
           }
           break
         case 'comment':
