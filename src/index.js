@@ -138,7 +138,7 @@ function formatTag(node) {
           break
         case 'code':
           var isNoNewline = i - 1 < 0 ? true : (node.children[i - 1].type == 'text' && node.children[i - 1].content != '')
-          if(element.name == '{' || element.name.includes('@{')){
+          if(element.name == '{' || (element.name.includes('@{') && node.children.length <= 1)){
             innerHTML = concat([innerHTML, softline, formatRazor(element)])
             hasInnerElement = true
           }
