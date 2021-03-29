@@ -10,7 +10,8 @@ const languages = [
   {
     extensions: ['.razor'],
     name: 'Razor',
-    parsers: ['razor-parse']
+    parsers: ['razor-parse'],
+    vscodeLanguageIds: 'razor',
   }
 ]
 
@@ -138,7 +139,7 @@ function formatTag(node) {
           break
         case 'code':
           var isNoNewline = i - 1 < 0 ? true : (node.children[i - 1].type == 'text' && node.children[i - 1].content != '')
-          if(element.name == '{' || (element.name.includes('@{') && node.children.length <= 1)){
+          if(element.name == '{' || element.name.includes('@{')){
             innerHTML = concat([innerHTML, softline, formatRazor(element)])
             hasInnerElement = true
           }
